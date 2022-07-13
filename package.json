@@ -1,10 +1,10 @@
 {
-  "name": "sync-validator-chain",
+  "name": "@ihor-pravdin/sync-validator-chain",
   "version": "1.0.0",
-  "description": "Module for data validation and coertion.",
+  "description": "Module for data validation and coercion.",
   "main": "src/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,9 @@
   },
   "homepage": "https://github.com/ihor-pravdin/sync-validator-chain#readme",
   "dependencies": {
-    "validator": "^13.7.0"
+    "validator": "*"
+  },
+  "devDependencies": {
+    "mocha": ">=10.0.0"
   }
 }
