@@ -1,0 +1,27 @@
+{
+  "name": "sync-validator-chain",
+  "version": "1.0.0",
+  "description": "Module for data validation and coertion.",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ihor-pravdin/sync-validator-chain.git"
+  },
+  "author": "Taod Person",
+  "license": "ISC",
+  "keywords": [
+    "sync",
+    "validation",
+    "coercion"
+  ],
+  "bugs": {
+    "url": "https://github.com/ihor-pravdin/sync-validator-chain/issues"
+  },
+  "homepage": "https://github.com/ihor-pravdin/sync-validator-chain#readme",
+  "dependencies": {
+    "validator": "^13.7.0"
+  }
+}
