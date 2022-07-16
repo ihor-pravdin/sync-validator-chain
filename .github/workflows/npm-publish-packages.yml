@@ -8,7 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      #- uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 16
@@ -28,6 +28,7 @@ jobs:
         run: |
          git config user.name github-actions
          git config user.email github-actions@github.com
+         git status
          git add .
          git commit -m "release ${{ github.event.release.tag_name }}"
          git push origin main:main
@@ -39,7 +40,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v3
+      #- uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 16
