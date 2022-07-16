@@ -1,21 +1,25 @@
 # sync-validator-chain
 **sync-validator-chain** is a simple wrap for powerful [validator.js](https://github.com/validatorjs/validator.js) lib that allows you to chain validation rules.
 Inspired by another grate lib [express-validator](https://github.com/express-validator/express-validator).
-## Usage
 
+## Usage
 ```js
-const {check, conform, isValid, validationErrors} = require('sync-validator-chain');
+const {check, conform, isValid, validationErrors} = require('@toadperson/sync-validator-chain')
+
+const chain1 = check('10').isInt({min: 1}).toInt() 
+const chain2 = check('0').isInt({min: 1}).toInt()
 
 // conform
-conform(check('10').isInt({min: 1}).toInt()) // 10
-conform(check('0').isInt({min: 1}).toInt()) // null
+conform(chain1) // 10
+conform(chain2) // null
 
 // isValid
-isValid(check('10').isInt({min: 1}).toInt()) // true
-isValid(check('0').isInt({min: 1}).toInt()) // false
+isValid(chain1) // true
+isValid(chain2) // false
 
 // validationErrors
-validationErrors(check('0').isInt({min: 1}).toInt()) // returns errors info
+validationErrors(chain1) // []
+validationErrors(chain2) // returns errors info
 // [
 //   {
 //     fn: 'isInt',

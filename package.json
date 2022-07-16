@@ -1,5 +1,5 @@
 {
-  "name": "@ihor-pravdin/sync-validator-chain",
+  "name": "@toadperson/sync-validator-chain",
   "version": "1.0.1",
   "description": "Module for data validation and coercion.",
   "main": "src/main.js",
