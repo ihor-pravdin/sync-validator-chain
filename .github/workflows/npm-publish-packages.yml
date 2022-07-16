@@ -15,27 +15,28 @@ jobs:
       - run: npm ci
       - run: npm test
 
-#  set-release-version:
-#    needs: build
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: actions/setup-node@v3
-#        with:
-#          node-version: 16
-#      - run: npm config set commit-hooks false
-#      - run: npm config set git-tag-version false
-#      - run: npm version ${{ github.event.release.tag_name }}
-#      - run: git config user.name github-actions
-#      - run: git config user.email github-actions@github.com
-#      - run: git status
-#      - run: git add .
-#      - run: git commit -m "release ${{ github.event.release.tag_name }}"
-#      - run: git push
+  set-release-version:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: npm config set commit-hooks false
+      - run: npm config set git-tag-version false
+      - run: git config user.name github-actions
+      - run: git config user.email github-actions@github.com
+      - run: git checkout main
+      - run: npm version ${{ github.event.release.tag_name }}
+      - run: git status
+      - run: git add .
+      - run: git commit -m "release ${{ github.event.release.tag_name }}"
+      - run: git push
 
   publish:
-#    needs: set-release-version
-    needs: build
+    needs: set-release-version
+#    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
