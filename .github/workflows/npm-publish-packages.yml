@@ -23,11 +23,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: git config user.name github-actions
-      - run: git config user.email github-actions@github.com
-      - run: npm version ${{ github.event.release.tag_name }}
+      - run: npm --no-git-tag-version version ${{ github.event.release.tag_name }}
       - name: commit and push changes
         run: |
+         git config user.name github-actions
+         git config user.email github-actions@github.com
          git add .
          git commit -m "release ${{ github.event.release.tag_name }}"
          git push
