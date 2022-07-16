@@ -1,6 +1,6 @@
 {
   "name": "@toadperson/sync-validator-chain",
-  "version": "1.0.12",
+  "version": "1.0.16",
   "description": "Module for data validation and coercion.",
   "main": "src/main.js",
   "scripts": {
