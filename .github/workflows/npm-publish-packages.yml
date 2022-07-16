@@ -30,7 +30,7 @@ jobs:
          git config user.email github-actions@github.com
          git add .
          git commit -m "release ${{ github.event.release.tag_name }}"
-         git push
+         git push origin refs/heads/main:main
 
   publish:
     needs: set-release-version
