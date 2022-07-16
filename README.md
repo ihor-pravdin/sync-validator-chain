@@ -1,4 +1,8 @@
 # sync-validator-chain
+
+[![NPM version](https://img.shields.io/npm/v/@toadperson/sync-validator-chain.svg)](https://www.npmjs.com/package/@toadperson/sync-validator-chain)
+
+
 **sync-validator-chain** is a simple wrap for powerful [validator.js](https://github.com/validatorjs/validator.js) lib that allows you to chain validation rules.
 Inspired by another grate lib [express-validator](https://github.com/express-validator/express-validator).
 
