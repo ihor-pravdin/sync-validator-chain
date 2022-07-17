@@ -2,52 +2,88 @@
 
 const validator = require('validator');
 
-/*** CHAINS STATE STORAGE ***/
+/*** SPEC STATES STORAGE ***/
 
 const states = new WeakMap();
 
 /*** VALIDATOR CHAIN ***/
 
-function ValidatorChain(str) {
+function Spec(name) {
     states.set(this, {
-        str,
-        errors: [],
-        sanitized: null
+        name,
+        input: null,
+        error: null,
+        conformed: null,
+        fns: new Map()
     });
 }
 
 Object.keys(validator).forEach(fn => {
-    ValidatorChain.prototype[fn] = function (...args) {
-        const {str, errors, sanitized} = states.get(this);
-        const state = {str};
-        const result = validator[fn].call(validator, sanitized || str, ...args);
-        if (result === false) {
-            errors.push({
-                fn,
-                param: str,
-                message: `${fn}(${args.map(arg => JSON.stringify(arg)).join(', ')}) failed with '${str}'`
-            });
-        }
-        state.sanitized = typeof result === 'boolean' ? sanitized : result;
-        state.errors = errors;
+    Spec.prototype[fn] = function (...args) {
+        const state = states.get(this);
+        state.fns.set(fn, [validator[fn].bind(validator), args]);
         states.set(this, state);
         return this;
     }
 });
 
-/*** STATIC ***/
+Spec.spec = name => {
+    if (typeof name !== 'string') {
+        throw new Error("Spec name is undefined.");
+    }
+    return new Spec(name);
+}
 
-ValidatorChain.check = str => new ValidatorChain('' + str);
+Spec.check = (spec, input) => {
+    const state = states.get(spec);
+    if (state.fns.size === 0) {
+        throw new Error("Spec should contains at list one validation rule.");
+    }
+    state.conformed = null;
+    state.error = null;
+    state.input = '' + input;
+    states.set(spec, state);
+    state.fns.forEach(([fn, args], fnName) => {
+        let {input, error, conformed} = states.get(spec);
+        if (error === null) {
+            let str = conformed || input;
+            let result = fn.call(spec, str, ...args);
+            if (result === false) {
+                state.error = `${fnName}(${args.map(arg => JSON.stringify(arg)).join(', ')}) failed with '${str}'`
+            } else {
+                state.conformed = typeof result === 'boolean' ? conformed : result;
+            }
+            states.set(spec, state);
+        }
+    });
+    return {...state};
+}
 
-ValidatorChain.conform = chain => {
-    const {str, errors, sanitized} = states.get(chain);
-    return errors.length === 0 ? sanitized || str : null;
+Spec.isValid = state => state.error === null;
+
+Spec.conform = ({input, error, conformed}) => error === null ? conformed || input : null;
+
+Spec.explain = ({name, input, error, fns}) => {
+    return error === null ? null : {
+        name,
+        input,
+        message: error,
+        rules: [...fns.keys()]
+    };
 };
 
-ValidatorChain.validationErrors = chain => states.get(chain).errors;
 
-ValidatorChain.isValid = chain => ValidatorChain.validationErrors(chain).length === 0;
+let ch1 = Spec.spec('ch1').trim().isInt({min: 1}).toInt();
+// let ch2 = Spec.spec('ch1').isInt().toInt();
+let res1 = Spec.check(ch1, ' 10 ');
+// let res2 = Spec.check(ch2, '100');
+console.log('res1', res1);
+// console.log('res2', res2);
+console.log('isValid', Spec.isValid(res1));
+console.log('conform', Spec.conform(res1));
+console.log('explain', Spec.explain(res1));
 
-/*** EXPORTS ***/
 
-module.exports = {validator, ...ValidatorChain};
+// /*** EXPORTS ***/
+//
+// module.exports = {validator, ...Spec};
