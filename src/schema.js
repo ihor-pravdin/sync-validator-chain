@@ -4,6 +4,19 @@ const {INVALID} = require('./constants');
 const states = require('./states');
 const Spec = require('./spec');
 
+/*** SCHEMA VALIDATION RESULT ***/
+
+function SchemaValidationResult(state) {
+    // private
+    const input = state.input;
+    const errors = state.errors;
+    const conformed = state.conformed;
+    // public
+    this.isValid = () => errors.length === 0;
+    this.conform = () => this.isValid() ? conformed || input : INVALID;
+    this.explain = () => this.isValid() ? null : errors;
+}
+
 /*** SCHEMA ***/
 
 function Schema(name, {req, opt}) {
@@ -53,41 +66,57 @@ Schema.check = (schema, input) => {
     });
     [...state.req, ...state.opt].forEach(s => {
         let field = states.get(s).name;
-        if(state.input[field] !== undefined) {
+        let input = state.input[field];
+        if (input !== undefined) {
             switch (true) {
                 case (s instanceof Spec):
-                    let result = Spec.check(s, state.input[field]);
-                    if (result.isValid()) {
-                        state.input[field] = result.conform();
+                    let specResult = Spec.check(s, input);
+                    if (specResult.isValid()) {
+                        state.input[field] = specResult.conform();
                         state.conformed = state.input;
                     } else {
-                        state.errors.push({schema: state.name, ...result.explain()});
+                        state.errors.push({schema: state.name, ...specResult.explain()});
                     }
                     break;
                 case (s instanceof Schema):
-                    console.log('schema'); //todo
+                    let schemaResult = Schema.check(s, input);
+                    if (!schemaResult.isValid()) {
+                        state.errors.push(...schemaResult.explain());
+                    }
                     break;
+                default:
+                    throw new TypeError(`Invalid validator object passed. Expected instance of 'Spec' or 'Schema'.`);
             }
         }
     });
     states.set(schema, state);
-    return {...state};
+    return new SchemaValidationResult(state);
 }
 
-/*** ***/
+/*** EXPORTS ***/
+
+module.exports = Schema;
 
 
-
-
-let specFirstName = Spec.spec('firstName').trim().isLength({min: 3, max: 32})
-let specSecondName = Spec.spec('lastName').trim().isLength({min: 3, max: 32})
-let specAge = Spec.spec('age').trim().isInt({min: 0}).toInt()
-
-let schm = Schema.schema('foo', {req: [specFirstName, specSecondName, specAge]})
-let res = Schema.check(schm, {
-    firstName: "  Toad",
-    lastName: "Person",
-    age: "35  "
-})
-
-console.log(res)
+// let specFirstName = Spec.spec('firstName').trim().isLength({min: 3, max: 32});
+// let specSecondName = Spec.spec('lastName').trim().isLength({min: 3, max: 32});
+// let specAge = Spec.spec('age').trim().isInt({min: 0}).toInt();
+// let specAmount = Spec.spec('amount').trim().isInt({min: 0}).toInt();
+// let specRate = Spec.spec('rate').trim().isInt({min: 1}).toInt();
+//
+// let schemaSalary = Schema.schema('salary', {req: [specAmount], opt: [specRate]});
+//
+// let request = Schema.schema('request', {req: [specFirstName, specSecondName, specAge, schemaSalary]});
+//
+// let res = Schema.check(request, {
+//     firstName: "  Toad",
+//     lastName: "Person",
+//     age: "35  ",
+//     salary: {
+//         amount: " 100",
+//         rate: "5"
+//     }
+// });
+//
+// console.log(res.conform());
+// console.log(res.explain());
