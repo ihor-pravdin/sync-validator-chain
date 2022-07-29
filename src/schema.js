@@ -4,10 +4,9 @@ const states = require('./states');
 const {INVALID, VALID} = require('./constants');
 const Spec = require('./spec');
 
-/*** SCHEMA VALIDATION RESULT ***/
+/*** SCHEMA VALIDATION RESULT CONSTRUCTOR ***/
 
 function SchemaValidationResult(state) {
-    // private
     const {input, errors, conformed} = state;
     // public
     this.isValid = () => errors.length === 0;
@@ -15,7 +14,7 @@ function SchemaValidationResult(state) {
     this.explain = () => this.isValid() ? VALID : errors;
 }
 
-/*** SCHEMA ***/
+/*** SCHEMA CONSTRUCTOR ***/
 
 function Schema(name, {req, opt}) {
     states.set(this, {
@@ -28,64 +27,88 @@ function Schema(name, {req, opt}) {
     });
 }
 
+/*** PRIVATE STATIC METHODS ***/
+
+// checks input object's field according to validator
+const check = (state, validator) => {
+    const field = states.get(validator).name;
+    const input = state.input[field];
+    let result, explanation;
+    switch (true) {
+        case (validator instanceof Spec):
+            result = Spec.check(validator, input);
+            if (result.isValid()) {
+                state.input[field] = result.conform();
+                state.conformed = state.input;
+            } else {
+                explanation = result.explain();
+                state.errors.push({
+                    schema: state.name,
+                    spec: explanation.spec,
+                    message: `schema: ${state.name}, ` + explanation.message,
+                    rules: explanation.rules
+                });
+            }
+            break;
+        case (validator instanceof Schema):
+            result = Schema.check(validator, input);
+            if (!result.isValid()) {
+                state.errors.push(...result.explain());
+            }
+            break;
+    }
+};
+
 /*** PUBLIC STATIC METHODS ***/
 
-Schema.schema = (name, {req = [], opt = []}) => { // creates an instance of Schema
-    if (typeof name !== 'string') {
-        throw new TypeError(`Schema 'name' is not a string.`);
+// creates an instance of Schema
+Schema.schema = (name, {req = [], opt = []}) => {
+    if (!!name && typeof name !== 'string') {
+        throw new TypeError(`Schema 'name' is not a 'String'.`);
     }
     if (!Array.isArray(req) || !Array.isArray(opt)) {
-        throw new TypeError(`Schema 'req' or 'opt' is not an array.`);
+        throw new TypeError(`Schema 'req' or 'opt' is not an 'Array'.`);
     }
-    [...opt, ...req].forEach(s => {
-        if (!(s instanceof Spec) && !(s instanceof Schema)) {
-            throw new TypeError(`Invalid validator object passed. Expected instance of 'Spec' or 'Schema'.`);
+    [...opt, ...req].forEach(v => {
+        if (!(v instanceof Spec) && !(v instanceof Schema)) {
+            throw new TypeError(`Invalid validator passed. Expected instance of 'Spec' or 'Schema'.`);
         }
     });
     return new Schema(name, {req, opt});
 };
 
-Schema.check = (schema, input = {}) => { // checks input object according to schema
-    if (!(schema instanceof Schema)) {
-        throw new TypeError(`Invalid validator object passed. Expected instance of 'Schema'.`);
+// checks input object according to schema
+Schema.check = (schema, input = {}) => {
+    if (!!schema && !(schema instanceof Schema)) {
+        throw new TypeError(`Invalid validator passed. Expected instance of 'Schema'.`);
     }
-    const state = {...states.get(schema)};
+    if (!!input && input.constructor.name !== 'Object') {
+        throw new TypeError(`Schema 'input' is not an 'Object'.`);
+    }
+    const state = states.get(schema);
     state.input = input;
     state.conformed = undefined;
     state.errors = [];
-    state.req.map(s => states.get(s).name).forEach(field => {
-        if (state.input[field] === undefined) {
+    let field;
+    state.req.forEach(validator => {
+        field = states.get(validator).name;
+        if (state.input[field] !== undefined) {
+            check(state, validator);
+        } else {
             state.errors.push({
                 schema: state.name,
                 message: `Required field '${field}' is missing for schema '${state.name}'.`
             });
         }
     });
-    [...state.req, ...state.opt].forEach(s => {
-        let field = states.get(s).name;
-        let input = state.input[field];
-        if (input !== undefined) {
-            switch (true) {
-                case (s instanceof Spec):
-                    let specResult = Spec.check(s, input);
-                    if (specResult.isValid()) {
-                        state.input[field] = specResult.conform();
-                        state.conformed = state.input;
-                    } else {
-                        state.errors.push({schema: state.name, ...specResult.explain()});
-                    }
-                    break;
-                case (s instanceof Schema):
-                    let schemaResult = Schema.check(s, input);
-                    if (!schemaResult.isValid()) {
-                        state.errors.push(...schemaResult.explain());
-                    }
-                    break;
-            }
-        }
+    state.opt.forEach(validator => {
+        field = states.get(validator).name;
+        if (state.input[field] !== undefined) {
+            check(state, validator);
+         }
     });
     return new SchemaValidationResult(state);
-}
+};
 
 /*** EXPORTS ***/
 
