@@ -1,6 +1,6 @@
 'use strict';
 
-const {INVALID} = require('./constants');
+const {VALID, INVALID} = require('./constants');
 const states = require('./states');
 const Spec = require('./spec');
 
@@ -14,7 +14,7 @@ function SchemaValidationResult(state) {
     // public
     this.isValid = () => errors.length === 0;
     this.conform = () => this.isValid() ? conformed || input : INVALID;
-    this.explain = () => this.isValid() ? null : errors;
+    this.explain = () => this.isValid() ? VALID : errors;
 }
 
 /*** SCHEMA ***/
@@ -41,7 +41,7 @@ Schema.schema = (name, {req = [], opt = []}) => {
     }
     [...opt, ...req].forEach(s => {
         if (!(s instanceof Spec) && !(s instanceof Schema)) {
-            throw new TypeError(`Invalid spec or schema passed.`);
+            throw new TypeError(`Invalid validator object passed. Expected instance of 'Spec' or 'Schema'.`);
         }
     });
     return new Schema(name, {req, opt});
@@ -49,7 +49,7 @@ Schema.schema = (name, {req = [], opt = []}) => {
 
 Schema.check = (schema, input) => {
     if (!(schema instanceof Schema)) {
-        throw new TypeError(`Invalid schema passed. Expected instance of 'Schema'.`);
+        throw new TypeError(`Invalid validator object passed. Expected instance of 'Schema'.`);
     }
     const state = states.get(schema);
     state.conformed = undefined;
@@ -96,27 +96,3 @@ Schema.check = (schema, input) => {
 /*** EXPORTS ***/
 
 module.exports = Schema;
-
-
-// let specFirstName = Spec.spec('firstName').trim().isLength({min: 3, max: 32});
-// let specSecondName = Spec.spec('lastName').trim().isLength({min: 3, max: 32});
-// let specAge = Spec.spec('age').trim().isInt({min: 0}).toInt();
-// let specAmount = Spec.spec('amount').trim().isInt({min: 0}).toInt();
-// let specRate = Spec.spec('rate').trim().isInt({min: 1}).toInt();
-//
-// let schemaSalary = Schema.schema('salary', {req: [specAmount], opt: [specRate]});
-//
-// let request = Schema.schema('request', {req: [specFirstName, specSecondName, specAge, schemaSalary]});
-//
-// let res = Schema.check(request, {
-//     firstName: "  Toad",
-//     lastName: "Person",
-//     age: "35  ",
-//     salary: {
-//         amount: " 100",
-//         rate: "5"
-//     }
-// });
-//
-// console.log(res.conform());
-// console.log(res.explain());
