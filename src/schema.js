@@ -61,29 +61,18 @@ const check = (state, validator) => {
 
 /*** PUBLIC STATIC METHODS ***/
 
-// creates an instance of Schema
 Schema.schema = (name, {req = [], opt = []}) => {
-    if (!!name && typeof name !== 'string') {
-        throw new TypeError(`Schema 'name' is not a 'String'.`);
-    }
-    if (!Array.isArray(req) || !Array.isArray(opt)) {
-        throw new TypeError(`Schema 'req' or 'opt' is not an 'Array'.`);
-    }
     [...opt, ...req].forEach(v => { // validator
         if (!(v instanceof Spec) && !(v instanceof Schema)) {
             throw new TypeError(`Invalid validator passed. Expected instance of 'Spec' or 'Schema'.`);
         }
     });
-    return new Schema(name, {req, opt});
+    return new Schema('' + name, {req, opt});
 };
 
-// checks input object according to schema
 Schema.check = (schema, input = {}) => {
-    if (!!schema && !(schema instanceof Schema)) {
+    if (!schema || !(schema instanceof Schema)) {
         throw new TypeError(`Invalid validator passed. Expected instance of 'Schema'.`);
-    }
-    if (!!input && input.constructor.name !== 'Object') {
-        throw new TypeError(`Schema 'input' is not an 'Object'.`);
     }
     const state = states.get(schema);
     state.input = input;
