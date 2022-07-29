@@ -54,11 +54,11 @@ const invalidInput = {
     }
 };
 
-/* Schema valid input */
+/* Schema: valid input */
 
 let result;
 
-console.log('\n--- Schema valid input ----\n');
+console.log('\n--- Schema: valid input ----\n');
 
 result = check(schemaRequest, validInput);
 
@@ -66,9 +66,9 @@ console.log('isValid:', result.isValid());
 console.log('conform:', result.conform());
 console.log('explain:', result.explain());
 
-/* Schema invalid input */
+/* Schema: invalid input */
 
-console.log('\n--- Schema invalid input ----\n');
+console.log('\n--- Schema: invalid input ----\n');
 
 result = check(schemaRequest, invalidInput);
 

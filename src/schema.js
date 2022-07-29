@@ -69,7 +69,7 @@ Schema.schema = (name, {req = [], opt = []}) => {
     if (!Array.isArray(req) || !Array.isArray(opt)) {
         throw new TypeError(`Schema 'req' or 'opt' is not an 'Array'.`);
     }
-    [...opt, ...req].forEach(v => {
+    [...opt, ...req].forEach(v => { // validator
         if (!(v instanceof Spec) && !(v instanceof Schema)) {
             throw new TypeError(`Invalid validator passed. Expected instance of 'Spec' or 'Schema'.`);
         }

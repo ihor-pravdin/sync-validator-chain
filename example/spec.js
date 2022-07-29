@@ -9,11 +9,11 @@ const specValue = spec('value').trim().isInt({min: 1, max: 100}).toInt();
 const validInput = "10 ";
 const invalidInput = "0";
 
-/* Spec valid input */
+/* Spec: valid input */
 
 let result;
 
-console.log('\n--- Spec valid input ----\n');
+console.log('\n--- Spec: valid input ----\n');
 
 result = check(specValue, validInput);
 
@@ -21,9 +21,9 @@ console.log('isValid:', result.isValid());
 console.log('conform:', result.conform());
 console.log('explain:', result.explain());
 
-/* Spec invalid input */
+/* Spec: invalid input */
 
-console.log('\n--- Spec invalid input ----\n');
+console.log('\n--- Spec: invalid input ----\n');
 
 result = check(specValue, invalidInput);
 

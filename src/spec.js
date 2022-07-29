@@ -7,7 +7,6 @@ const {INVALID, VALID} = require('./constants');
 /*** SPEC VALIDATION RESULT ***/
 
 function SpecValidationResult(state) {
-    // private
     const {name: spec, input, error, conformed} = state;
     const rules = [...state.fns.keys()];
     // public
@@ -40,14 +39,16 @@ Object.keys(validator).forEach(fn => {
 
 /*** PUBLIC STATIC METHODS ***/
 
-Spec.spec = name => { // creates an instance of Spec
-    if (typeof name !== 'string') {
-        throw new TypeError(`Spec 'name' is not a string.`);
+// creates an instance of Spec
+Spec.spec = name => {
+    if (!!name && typeof name !== 'string') {
+        throw new TypeError(`Spec 'name' is not a 'String'.`);
     }
     return new Spec(name);
 }
 
-Spec.check = (spec, input = '') => { // checks input sting according to spec
+// checks input sting according to spec
+Spec.check = (spec, input = '') => {
     if (!(spec instanceof Spec)) {
         throw new TypeError(`Invalid validator object passed. Expected instance of 'Spec'.`);
     }
