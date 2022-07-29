@@ -8,15 +8,12 @@ const {INVALID, VALID} = require('./constants');
 
 function SpecValidationResult(state) {
     // private
-    const spec = state.name;
-    const input = state.input;
-    const error = state.error;
-    const conformed = state.conformed;
+    const {name: spec, input, error, conformed} = state;
     const rules = [...state.fns.keys()];
     // public
     this.isValid = () => error === null;
     this.conform = () => this.isValid() ? conformed || input : INVALID;
-    this.explain = () => this.isValid() ? VALID : {spec, input, message: error, rules};
+    this.explain = () => this.isValid() ? VALID : {spec, message: error, rules};
 }
 
 /*** SPEC ***/
@@ -31,54 +28,49 @@ function Spec(name) {
     });
 }
 
-/*** VALIDATION RULES ***/
+/*** PUBLIC VALIDATION RULES METHODS ***/
 
 Object.keys(validator).forEach(fn => {
     Spec.prototype[fn] = function (...args) {
         const state = states.get(this);
         state.fns.set(fn, [validator[fn].bind(validator), args]);
-        states.set(this, state);
         return this;
     }
 });
 
-/*** STATIC ***/
+/*** PUBLIC STATIC METHODS ***/
 
-Spec.spec = name => {
+Spec.spec = name => { // creates an instance of Spec
     if (typeof name !== 'string') {
-        throw new TypeError(`Spec's 'name' is not a 'string'.`);
+        throw new TypeError(`Spec 'name' is not a string.`);
     }
     return new Spec(name);
 }
 
-Spec.check = (spec, input) => {
+Spec.check = (spec, input = '') => { // checks input sting according to spec
     if (!(spec instanceof Spec)) {
         throw new TypeError(`Invalid validator object passed. Expected instance of 'Spec'.`);
     }
     const state = states.get(spec);
-    if (!state) {
-        throw new Error(`Spec's state is missing.`);
-    }
-    if (state.fns.size === 0) {
-        throw new Error(`Spec should contains at list one validation rule.`);
-    }
+    state.input = '' + input;
     state.conformed = undefined;
     state.error = null;
-    state.input = '' + input;
-    states.set(spec, state);
-    state.fns.forEach(([fn, args], fnName) => {
-        let {input, error, conformed} = states.get(spec);
-        if (error === null) {
-            let str = conformed === undefined ? input : conformed;
-            let result = fn.call(spec, str, ...args);
-            if (result === false) {
-                state.error = `${fnName}(${args.map(arg => JSON.stringify(arg)).join(', ')}) failed with '${str}'`;
-            } else {
-                state.conformed = typeof result === 'boolean' ? conformed : result;
+    if (state.fns.size === 0) {
+        state.conformed = state.input;
+    } else {
+        state.fns.forEach(([fn, args], fnName) => {
+            let {name, input, error, conformed} = state;
+            if (error === null) {
+                let str = conformed === undefined ? input : conformed;
+                let result = fn.call(spec, str, ...args);
+                if (result === false) {
+                    state.error = `spec: '${name}', rule: ${fnName}(${args.map(arg => JSON.stringify(arg)).join(', ')}) - failed with "${str}"`;
+                } else {
+                    state.conformed = typeof result === 'boolean' ? conformed : result;
+                }
             }
-            states.set(spec, state);
-        }
-    });
+        });
+    }
     return new SpecValidationResult(state);
 };
 

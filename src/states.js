@@ -1,3 +1,5 @@
 'use strict';
 
-module.exports = new WeakMap();
+const states = new WeakMap();
+
+module.exports = states;
