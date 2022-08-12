@@ -26,7 +26,13 @@ function Spec(name) {
         fns: new Map()
     });
     Object.defineProperty(this, 'toJSON', {
-        value: () => `[Spec ${name}]`,
+        value: () => {
+            // const rules = [states.get(this).fns].map(([[fn, args], fnName]) => {
+            //     return `${fnName}(${args.map(arg => JSON.stringify(arg)).join(', ')})`;
+            // });
+            // return `Spec['${name}']:[${rules}]`
+            return `Spec('${name}')`;
+        },
         enumerable: false
     });
 }
