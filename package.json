@@ -22,9 +22,10 @@
   },
   "homepage": "https://github.com/ihor-pravdin/sync-validator-chain#readme",
   "dependencies": {
-    "validator": "*"
+    "validator": "^13.7.0"
   },
   "devDependencies": {
+    "@types/validator": "^13.7.5",
     "mocha": ">=10.0.0"
   }
 }
