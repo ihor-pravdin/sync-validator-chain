@@ -67,9 +67,7 @@ class Spec {
             state.conformed = state.input;
         }
         else {
-            state.fns.forEach((tuple, method) => {
-                let fn = tuple[0];
-                let args = tuple[1];
+            state.fns.forEach(([fn, args], method) => {
                 let { name, input, error, conformed } = state;
                 if (error === undefined) {
                     let str = conformed === undefined ? input : conformed;
@@ -93,16 +91,10 @@ exports.Spec = Spec;
 //                          //
 //////////////////////////////
 class SpecValidationResult {
-    /**
-     * Spec Validation Result Constructor
-     * @param state
-     */
-    constructor(state) {
-        const { name: spec, input, error, conformed } = state;
-        const rules = [...state.fns.keys()];
+    constructor({ name, input, error, conformed, fns }) {
         this.isValid = () => error === undefined;
         this.conform = () => this.isValid() ? conformed || input : exports.INVALID;
-        this.explain = () => this.isValid() ? exports.VALID : { spec, message: error, rules };
+        this.explain = () => this.isValid() ? exports.VALID : { spec: name, message: error, rules: [...fns.keys()] };
     }
 }
 //////////////
@@ -116,13 +108,8 @@ class Schema {
      * @param name
      * @param fields
      */
-    constructor(name, fields) {
-        const state = {
-            name,
-            errors: [],
-            req: [...fields.req],
-            opt: [...fields.opt]
-        };
+    constructor(name, { req = [], opt = [] }) {
+        const state = { name, errors: [], req, opt };
         states.set(this, state);
     }
     /**
@@ -139,9 +126,9 @@ class Schema {
      * @param schema
      * @param input
      */
-    static check(schema, input = {}) {
+    static check(schema, input) {
         const state = states.get(schema);
-        state.input = input;
+        state.input = input || {};
         state.conformed = undefined;
         state.errors = [];
         let field;
@@ -183,7 +170,7 @@ _a = Schema, _Schema_check = function _Schema_check(state, validator) {
                 state.errors = [...state.errors, {
                         schema: state.name,
                         spec: explanation.spec,
-                        message: `schema: ${state.name}, ` + explanation.message,
+                        message: `schema: ${state.name}, ${explanation.message}`,
                         rules: explanation.rules
                     }];
             }
@@ -191,7 +178,7 @@ _a = Schema, _Schema_check = function _Schema_check(state, validator) {
         case "Schema":
             result = Schema.check(validator, input);
             if (!result.isValid()) {
-                state.errors.push(...result.explain());
+                state.errors = [...state.errors, ...result.explain()];
             }
             break;
     }
@@ -202,12 +189,7 @@ _a = Schema, _Schema_check = function _Schema_check(state, validator) {
 //                            //
 ////////////////////////////////
 class SchemaValidationResult {
-    /**
-     * Schema Validation Result Constructor
-     * @param state
-     */
-    constructor(state) {
-        const { input, errors, conformed } = state;
+    constructor({ input, errors, conformed }) {
         this.isValid = () => errors.length === 0;
         this.conform = () => this.isValid() ? conformed || input : exports.INVALID;
         this.explain = () => this.isValid() ? exports.VALID : errors;
