@@ -10,30 +10,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 var _a, _Schema_check;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Schema = exports.Spec = exports.INVALID = exports.VALID = void 0;
-const validator_1 = __importDefault(require("validator")); // validator.js
-/////////////////
-//             //
-//  CONSTANTS  //
-//             //
-/////////////////
+const validator_1 = __importDefault(require("validator"));
 exports.VALID = Symbol("VALID");
 exports.INVALID = Symbol("INVALID");
-//////////////
-//          //
-//  STATES  //
-//          //
-//////////////
-const states = new WeakMap(); // states of validator chains
-////////////
-//        //
-//  SPEC  //
-//        //
-////////////
+const states = new WeakMap();
 class Spec {
-    /**
-     * Spec Constructor
-     * @param name
-     */
     constructor(name) {
         const state = { name, fns: new Map() };
         states.set(this, state);
@@ -44,20 +25,9 @@ class Spec {
             };
         });
     }
-    /**
-     * Factory method. Creates new Spec validation chain.
-     * @param name
-     * @returns
-     */
     static spec(name) {
         return new Spec(name);
     }
-    /**
-     * Checks input value according to validation chain rules.
-     * @param spec
-     * @param input
-     * @returns
-     */
     static check(spec, input) {
         const state = states.get(spec);
         state.input = '' + input;
@@ -85,11 +55,6 @@ class Spec {
     }
 }
 exports.Spec = Spec;
-//////////////////////////////
-//                          //
-//  SPEC VALIDATION RESULT  //
-//                          //
-//////////////////////////////
 class SpecValidationResult {
     constructor({ name, input, error, conformed, fns }) {
         this.isValid = () => error === undefined;
@@ -97,35 +62,14 @@ class SpecValidationResult {
         this.explain = () => this.isValid() ? exports.VALID : { spec: name, message: error, rules: [...fns.keys()] };
     }
 }
-//////////////
-//          //
-//  SCHEMA  //
-//          //
-//////////////
 class Schema {
-    /**
-     * Schema Constructor
-     * @param name
-     * @param fields
-     */
     constructor(name, { req = [], opt = [] }) {
         const state = { name, errors: [], req, opt };
         states.set(this, state);
     }
-    /**
-     * Factory method. Creates new Schema validator.
-     * @param name
-     * @param input
-     * @returns
-     */
     static schema(name, input) {
         return new Schema(name, input);
     }
-    /**
-     * Checks input value according to validation schema.
-     * @param schema
-     * @param input
-     */
     static check(schema, input) {
         const state = states.get(schema);
         state.input = input || {};
@@ -159,7 +103,7 @@ _a = Schema, _Schema_check = function _Schema_check(state, validator) {
     const input = state.input[field];
     let result, explanation;
     switch (validator.constructor.name) {
-        case "Spec":
+        case 'Spec':
             result = Spec.check(validator, input);
             if (result.isValid()) {
                 state.input[field] = result.conform();
@@ -175,7 +119,7 @@ _a = Schema, _Schema_check = function _Schema_check(state, validator) {
                     }];
             }
             break;
-        case "Schema":
+        case 'Schema':
             result = Schema.check(validator, input);
             if (!result.isValid()) {
                 state.errors = [...state.errors, ...result.explain()];
@@ -183,11 +127,6 @@ _a = Schema, _Schema_check = function _Schema_check(state, validator) {
             break;
     }
 };
-////////////////////////////////
-//                            //
-//  SCHEMA VALIDATION RESULT  //
-//                            //
-////////////////////////////////
 class SchemaValidationResult {
     constructor({ input, errors, conformed }) {
         this.isValid = () => errors.length === 0;
@@ -195,14 +134,4 @@ class SchemaValidationResult {
         this.explain = () => this.isValid() ? exports.VALID : errors;
     }
 }
-///
-let foo = Spec.spec('foo').trim().isInt({ min: 5 }).toInt();
-let bar = Spec.spec('bar').trim().isInt({ min: 5 }).toInt();
-console.log('typeof', typeof foo);
-console.log('constructor', foo.constructor.name);
-console.log('isValid', Spec.check(foo, ' 10').isValid());
-console.log('conform', Spec.check(foo, ' 10').conform());
-console.log('explain', Spec.check(foo, ' 10').explain());
-console.log('isValid', Spec.check(bar, ' 1').isValid());
-console.log('conform', Spec.check(bar, ' 1').conform());
-console.log('explain', Spec.check(bar, ' 1').explain());
+//# sourceMappingURL=main.js.map

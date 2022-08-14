@@ -54,10 +54,6 @@ const states: States = new WeakMap(); // states of validator chains
 ////////////
 
 export class Spec {
-    /**
-     * Spec Constructor
-     * @param name 
-     */
     protected constructor(name: string) {
         const state: SpecState = { name, fns: new Map() };
         states.set(this, state);
@@ -69,26 +65,18 @@ export class Spec {
         });
     }
 
-    /**
-     * Coppied validation rules from validator.js
-     */
+    //
+
     [index: string]: Value<Spec>
 
-    /**
-     * Factory method. Creates new Spec validation chain.
-     * @param name 
-     * @returns 
-     */
+    //
+
     public static spec(name: string): Spec {
         return new Spec(name);
     }
 
-    /**
-     * Checks input value according to validation chain rules.
-     * @param spec 
-     * @param input 
-     * @returns 
-     */
+    //
+
     public static check(spec: Spec, input: any): SpecValidationResult {
         const state: SpecState = states.get(spec) as SpecState;
         state.input = '' + input;
@@ -124,7 +112,6 @@ class SpecValidationResult {
     isValid: () => boolean
     conform: () => any
     explain: () => any
-
     constructor({ name, input, error, conformed, fns }: SpecState) {
         this.isValid = () => error === undefined;
         this.conform = () => this.isValid() ? conformed || input : INVALID;
@@ -139,31 +126,19 @@ class SpecValidationResult {
 //////////////
 
 export class Schema {
-    /**
-     * Schema Constructor
-     * @param name 
-     * @param fields 
-     */
     protected constructor(name: string, { req = [], opt = [] }: { req?: Validators[], opt?: Validators[] }) {
         const state: SchemaState = { name, errors: [], req, opt };
         states.set(this, state);
     }
 
-    /**
-     * Factory method. Creates new Schema validator.
-     * @param name 
-     * @param input 
-     * @returns 
-     */
+    //
+
     public static schema(name: string, input: any): Schema {
         return new Schema(name, input);
     }
 
-    /**
-     * Checks input value according to validation schema.
-     * @param schema 
-     * @param input 
-     */
+    //
+
     public static check(schema: Schema, input: any): SchemaValidationResult {
         const state: SchemaState = states.get(schema) as SchemaState;
         state.input = input || {};
@@ -189,6 +164,8 @@ export class Schema {
         });
         return new SchemaValidationResult(state);
     }
+
+    //
 
     static #check(state: SchemaState, validator: Validators) {
         const field = (states.get(validator) as StateInterface).name;
@@ -230,23 +207,9 @@ class SchemaValidationResult {
     isValid: () => boolean
     conform: () => any
     explain: () => any
-
-    constructor({input, errors, conformed}: SchemaState) {
+    constructor({ input, errors, conformed }: SchemaState) {
         this.isValid = () => errors.length === 0;
         this.conform = () => this.isValid() ? conformed || input : INVALID;
         this.explain = () => this.isValid() ? VALID : errors;
     }
 }
-
-///
-
-let foo = Spec.spec('foo').trim().isInt({ min: 5 }).toInt()
-let bar = Spec.spec('bar').trim().isInt({ min: 5 }).toInt()
-console.log('typeof', typeof foo)
-console.log('constructor', foo.constructor.name)
-console.log('isValid', Spec.check(foo, ' 10').isValid())
-console.log('conform', Spec.check(foo, ' 10').conform())
-console.log('explain', Spec.check(foo, ' 10').explain())
-console.log('isValid', Spec.check(bar, ' 1').isValid())
-console.log('conform', Spec.check(bar, ' 1').conform())
-console.log('explain', Spec.check(bar, ' 1').explain())

@@ -1,4 +1,6 @@
-const {spec: {spec, check}} = require('../src/main'); // require('@toadperson/sync-validator-chain')
+const {Spec: {spec, check}} = require('../src/main.js') // require('@toadperson/sync-validator-chain')
+
+//console.log(spec)
 
 /* Validation spec */
 
