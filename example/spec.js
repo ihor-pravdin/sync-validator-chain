@@ -35,6 +35,6 @@ console.log('explain:', result.explain());
 
 /* Exports */
 
-if (require.main !== module) {
-    module.exports = {specValue, validInput, invalidInput};
-}
+// if (require.main !== module) {
+//     module.exports = {specValue, validInput, invalidInput};
+// }
