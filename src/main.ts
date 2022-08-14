@@ -45,7 +45,7 @@ interface SchemaState extends StateInterface {
 //          //
 //////////////
 
-const states: States = new WeakMap(); // states of validator chains
+const states: States = new WeakMap();
 
 ////////////
 //        //
@@ -80,8 +80,8 @@ export class Spec {
     public static check(spec: Spec, input: any): SpecValidationResult {
         const state: SpecState = states.get(spec) as SpecState;
         state.input = '' + input;
-        state.conformed = undefined;
-        state.error = undefined;
+        state.conformed = 'undefined';
+        state.error = 'undefined';
         if (state.fns.size === 0) {
             state.conformed = state.input;
         } else {

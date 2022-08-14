@@ -108,6 +108,7 @@ dist
 # SourceMap
 
 *.js.map
+*.ts.map
 
 # vscode
 
