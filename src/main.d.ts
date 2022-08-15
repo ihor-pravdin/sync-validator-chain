@@ -10,17 +10,17 @@ interface IState {
 interface IChainState extends IState {
     input?: string;
     conformed?: unknown;
-    error?: string;
+    error?: IErrorInfo;
     fns: Map<VJS, [Func<unknown>, unknown[]]>;
 }
 interface ISchemaState extends IState {
     input?: any;
-    conformed?: any;
-    errors: unknown[];
+    conformed?: object;
+    errors: IErrorInfo[];
     req: Validator[];
     opt: Validator[];
 }
-interface IErrorExplanation {
+interface IErrorInfo {
     message: string;
 }
 export declare class Chain {
@@ -44,13 +44,13 @@ export declare class Schema {
 declare class ChainValidationResult {
     isValid: () => boolean;
     conform: () => unknown;
-    explain: () => symbol | IErrorExplanation;
+    explain: () => symbol | IErrorInfo;
     constructor({ error, conformed }: IChainState);
 }
 declare class SchemaValidationResult {
     isValid: () => boolean;
-    conform: () => any;
-    explain: () => any;
+    conform: () => symbol | object;
+    explain: () => symbol | IErrorInfo[];
     constructor({ input, errors, conformed }: ISchemaState);
 }
 export {};

@@ -39,7 +39,8 @@ class Chain {
                 if (!error) {
                     const result = fn.call(chain, '' + conformed, ...args);
                     if (result === false) {
-                        state.error = `spec: '${name}', rule: ${method}(${args.map(arg => JSON.stringify(arg)).join(',')}) - failed with "${conformed}"`;
+                        const message = `spec: '${name}', rule: ${method}(${args.map(arg => JSON.stringify(arg)).join(',')}) - failed with "${conformed}"`;
+                        state.error = { message };
                     }
                     else {
                         state.conformed = typeof result === 'boolean' ? conformed : result;
@@ -65,19 +66,18 @@ class Schema {
         state.conformed = undefined;
         state.errors = [];
         state.req.forEach((validator) => {
-            let key = states.get(validator).name;
+            const key = states.get(validator).name;
             if (state.input[key] !== undefined) {
                 __classPrivateFieldGet(Schema, _a, "m", _Schema_check).call(Schema, state, validator);
             }
             else {
                 state.errors = [...state.errors, {
-                        schema: state.name,
                         message: `Required field '${key}' is missing for schema '${state.name}'.`
                     }];
             }
         });
         state.opt.forEach((validator) => {
-            let key = states.get(validator).name;
+            const key = states.get(validator).name;
             if (state.input[key] !== undefined) {
                 __classPrivateFieldGet(Schema, _a, "m", _Schema_check).call(Schema, state, validator);
             }
@@ -88,29 +88,24 @@ class Schema {
 exports.Schema = Schema;
 _a = Schema, _Schema_check = function _Schema_check(state, validator) {
     const key = states.get(validator).name;
-    let explanation;
     switch (validator.constructor.name) {
         case 'Chain':
-            let str = state.input[key];
-            let chainResult = Chain.check(validator, str);
-            if (chainResult.isValid()) {
-                state.conformed = Object.assign(Object.assign({}, state.conformed), { [key]: chainResult.conform() });
+            const str = state.input[key];
+            const chainValidationResult = Chain.check(validator, str);
+            const chainErrorInfo = chainValidationResult.explain();
+            if (chainValidationResult.isValid()) {
+                state.conformed = Object.assign(Object.assign({}, state.conformed), { [key]: chainValidationResult.conform() });
             }
             else {
-                let reason = chainResult.explain();
-                state.errors = [...state.errors, {
-                        schema: state.name,
-                        chain: reason.chain,
-                        message: `schema: ${state.name}, ${reason.message}`,
-                        rules: reason.rules
-                    }];
+                state.errors.push(chainErrorInfo);
             }
             break;
         case 'Schema':
-            let object = state.input[key];
-            let result = Schema.check(validator, object);
-            if (!result.isValid()) {
-                state.errors = [...state.errors, ...result.explain()];
+            const object = state.input[key];
+            const schemaValidationResult = Schema.check(validator, object);
+            const schemaErrorInfo = schemaValidationResult.explain();
+            if (!schemaValidationResult.isValid()) {
+                state.errors.push(...schemaErrorInfo);
             }
             break;
     }
@@ -119,7 +114,7 @@ class ChainValidationResult {
     constructor({ error, conformed }) {
         this.isValid = () => error === undefined;
         this.conform = () => this.isValid() ? conformed : exports.INVALID;
-        this.explain = () => this.isValid() ? exports.VALID : { message: error };
+        this.explain = () => this.isValid() ? exports.VALID : error;
     }
 }
 class SchemaValidationResult {
