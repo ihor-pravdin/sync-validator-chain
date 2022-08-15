@@ -1,44 +1,51 @@
 import vjs from 'validator';
 export declare const VALID: symbol;
 export declare const INVALID: symbol;
-type VJS = keyof typeof vjs;
-type Key<T> = T;
 type Func<T> = (...args: unknown[]) => T;
-type Validators = Chain | Schema;
+type VJS = keyof typeof vjs;
+type Validator = Chain | Schema;
 interface IState {
     name: string;
-    input?: any;
-    conformed?: any;
 }
 interface IChainState extends IState {
+    input?: string;
+    conformed?: unknown;
     error?: string;
-    fns: Map<Key<VJS>, [Func<unknown>, unknown[]]>;
+    fns: Map<VJS, [Func<unknown>, unknown[]]>;
 }
 interface ISchemaState extends IState {
-    errors: any[];
-    req: Validators[];
-    opt: Validators[];
+    input?: any;
+    conformed?: any;
+    errors: unknown[];
+    req: Validator[];
+    opt: Validator[];
+}
+interface IErrorExplanation {
+    message: string;
 }
 export declare class Chain {
     protected constructor(name: string);
     [index: string]: Func<Chain>;
-    static spec(name: string): Chain;
-    static check(spec: Chain, input: any): SpecValidationResult;
-}
-declare class SpecValidationResult {
-    isValid: () => boolean;
-    conform: () => any;
-    explain: () => any;
-    constructor({ name, input, error, conformed, fns }: IChainState);
+    static chain(name: string): Chain;
+    static check(chain: Chain, str: unknown): ChainValidationResult;
 }
 export declare class Schema {
     #private;
     protected constructor(name: string, { req, opt }: {
-        req?: Validators[];
-        opt?: Validators[];
+        req?: Validator[];
+        opt?: Validator[];
     });
-    static schema(name: string, input: any): Schema;
-    static check(schema: Schema, input: any): SchemaValidationResult;
+    static schema(name: string, schema: {
+        req?: Validator[];
+        opt?: Validator[];
+    }): Schema;
+    static check(schema: Schema, object: object): SchemaValidationResult;
+}
+declare class ChainValidationResult {
+    isValid: () => boolean;
+    conform: () => unknown;
+    explain: () => symbol | IErrorExplanation;
+    constructor({ error, conformed }: IChainState);
 }
 declare class SchemaValidationResult {
     isValid: () => boolean;

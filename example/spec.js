@@ -1,10 +1,10 @@
-const {Spec: {spec, check}} = require('../src/main.js') // require('@toadperson/sync-validator-chain')
+const {Chain: {chain, check}} = require('../src/main.js') // require('@toadperson/sync-validator-chain')
 
-//console.log(spec)
+//console.log(chain)
 
-/* Validation spec */
+/* Validation chain */
 
-const specValue = spec('value').trim().isInt({min: 1, max: 100}).toInt();
+const chainValue = chain('value').trim().isInt({min: 1, max: 100}).toInt();
 
 /* Inputs */
 
@@ -17,7 +17,7 @@ let result;
 
 console.log('\n--- Spec: valid input ----\n');
 
-result = check(specValue, validInput);
+result = check(chainValue, validInput);
 
 console.log('isValid:', result.isValid());
 console.log('conform:', result.conform());
@@ -27,7 +27,7 @@ console.log('explain:', result.explain());
 
 console.log('\n--- Spec: invalid input ----\n');
 
-result = check(specValue, invalidInput);
+result = check(chainValue, invalidInput);
 
 console.log('isValid:', result.isValid());
 console.log('conform:', result.conform());
@@ -36,5 +36,5 @@ console.log('explain:', result.explain());
 /* Exports */
 
 // if (require.main !== module) {
-//     module.exports = {specValue, validInput, invalidInput};
+//     module.exports = {chainValue, validInput, invalidInput};
 // }
