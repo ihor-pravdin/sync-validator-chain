@@ -109,7 +109,7 @@ dist
 
 *.d.ts
 *.js.map
-#*.ts.map
+*.ts.map
 *.d.ts.map
 
 # vscode
