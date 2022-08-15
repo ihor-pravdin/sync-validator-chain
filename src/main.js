@@ -9,24 +9,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _a, _Schema_check;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Schema = exports.Spec = exports.INVALID = exports.VALID = void 0;
+exports.Schema = exports.Chain = exports.INVALID = exports.VALID = void 0;
 const validator_1 = __importDefault(require("validator"));
 exports.VALID = Symbol("VALID");
 exports.INVALID = Symbol("INVALID");
 const states = new WeakMap();
-class Spec {
+class Chain {
     constructor(name) {
         const state = { name, fns: new Map() };
         states.set(this, state);
         Object.keys(validator_1.default).forEach((method) => {
-            Spec.prototype[method] = (...args) => {
-                state.fns.set(method, [validator_1.default[method].bind(validator_1.default), args]);
+            Chain.prototype[method] = (...args) => {
+                state.fns.set(method, [validator_1.default[(method)].bind(validator_1.default), args]);
                 return this;
             };
         });
     }
     static spec(name) {
-        return new Spec(name);
+        return new Chain(name);
     }
     static check(spec, input) {
         const state = states.get(spec);
@@ -54,7 +54,7 @@ class Spec {
         return new SpecValidationResult(state);
     }
 }
-exports.Spec = Spec;
+exports.Chain = Chain;
 class SpecValidationResult {
     constructor({ name, input, error, conformed, fns }) {
         this.isValid = () => error === undefined;
@@ -103,8 +103,8 @@ _a = Schema, _Schema_check = function _Schema_check(state, validator) {
     const input = state.input[field];
     let result, explanation;
     switch (validator.constructor.name) {
-        case 'Spec':
-            result = Spec.check(validator, input);
+        case 'Chain':
+            result = Chain.check(validator, input);
             if (result.isValid()) {
                 state.input[field] = result.conform();
                 state.conformed = state.input;
