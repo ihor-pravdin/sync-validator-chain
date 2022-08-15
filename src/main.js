@@ -16,7 +16,7 @@ exports.INVALID = Symbol("INVALID");
 const states = new WeakMap();
 class Chain {
     constructor(name) {
-        const state = { name, fns: new Map() };
+        const state = { name, errors: [], fns: new Map() };
         states.set(this, state);
         Object.keys(validator_1.default).forEach((method) => {
             Chain.prototype[method] = (...args) => {
@@ -32,23 +32,21 @@ class Chain {
         const state = states.get(chain);
         state.input = '' + str;
         state.conformed = state.input;
-        state.error = undefined;
+        state.errors = [];
         if (state.fns.size !== 0) {
             state.fns.forEach(([fn, args], method) => {
-                const { name, error, conformed } = state;
-                if (!error) {
-                    const result = fn.call(chain, '' + conformed, ...args);
-                    if (result === false) {
-                        const message = `spec: '${name}', rule: ${method}(${args.map(arg => JSON.stringify(arg)).join(',')}) - failed with "${conformed}"`;
-                        state.error = { message };
-                    }
-                    else {
-                        state.conformed = typeof result === 'boolean' ? conformed : result;
-                    }
+                const { name, errors, conformed } = state;
+                const result = fn.call(chain, '' + conformed, ...args);
+                if (result === false) {
+                    const message = `spec: '${name}', rule: ${method}(${args.map(arg => JSON.stringify(arg)).join(',')}) - failed with "${conformed}"`;
+                    state.errors.push({ message });
+                }
+                else {
+                    state.conformed = typeof result === 'boolean' ? conformed : result;
                 }
             });
         }
-        return new ChainValidationResult(state);
+        return new ValidationResult(state);
     }
 }
 exports.Chain = Chain;
@@ -82,45 +80,40 @@ class Schema {
                 __classPrivateFieldGet(Schema, _a, "m", _Schema_check).call(Schema, state, validator);
             }
         });
-        return new SchemaValidationResult(state);
+        return new ValidationResult(state);
     }
 }
 exports.Schema = Schema;
 _a = Schema, _Schema_check = function _Schema_check(state, validator) {
     const key = states.get(validator).name;
+    let validationResult;
+    let errorInfo;
     switch (validator.constructor.name) {
         case 'Chain':
             const str = state.input[key];
-            const chainValidationResult = Chain.check(validator, str);
-            const chainErrorInfo = chainValidationResult.explain();
-            if (chainValidationResult.isValid()) {
-                state.conformed = Object.assign(Object.assign({}, state.conformed), { [key]: chainValidationResult.conform() });
+            validationResult = Chain.check(validator, str);
+            errorInfo = validationResult.explain();
+            if (validationResult.isValid()) {
+                state.conformed = Object.assign(Object.assign({}, state.conformed), { [key]: validationResult.conform() });
             }
             else {
-                state.errors.push(chainErrorInfo);
+                state.errors.push(...errorInfo);
             }
             break;
         case 'Schema':
             const object = state.input[key];
-            const schemaValidationResult = Schema.check(validator, object);
-            const schemaErrorInfo = schemaValidationResult.explain();
-            if (!schemaValidationResult.isValid()) {
-                state.errors.push(...schemaErrorInfo);
+            validationResult = Schema.check(validator, object);
+            errorInfo = validationResult.explain();
+            if (!validationResult.isValid()) {
+                state.errors.push(...errorInfo);
             }
             break;
     }
 };
-class ChainValidationResult {
-    constructor({ error, conformed }) {
-        this.isValid = () => error === undefined;
-        this.conform = () => this.isValid() ? conformed : exports.INVALID;
-        this.explain = () => this.isValid() ? exports.VALID : error;
-    }
-}
-class SchemaValidationResult {
-    constructor({ input, errors, conformed }) {
+class ValidationResult {
+    constructor({ errors, conformed }) {
         this.isValid = () => errors.length === 0;
-        this.conform = () => this.isValid() ? conformed || input : exports.INVALID;
+        this.conform = () => this.isValid() ? conformed : exports.INVALID;
         this.explain = () => this.isValid() ? exports.VALID : errors;
     }
 }
