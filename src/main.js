@@ -16,7 +16,13 @@ exports.INVALID = Symbol("INVALID");
 const states = new WeakMap();
 class Chain {
     constructor(name) {
-        const state = { name, errors: [], fns: new Map() };
+        const state = {
+            name,
+            input: '',
+            errors: [],
+            conformed: '',
+            fns: new Map()
+        };
         states.set(this, state);
         Object.keys(validator_1.default).forEach((method) => {
             Chain.prototype[method] = (...args) => {
@@ -35,7 +41,7 @@ class Chain {
         state.errors = [];
         if (state.fns.size !== 0) {
             state.fns.forEach(([fn, args], method) => {
-                const { name, errors, conformed } = state;
+                const { name, conformed } = state;
                 const result = fn.call(chain, '' + conformed, ...args);
                 if (result === false) {
                     const message = `spec: '${name}', rule: ${method}(${args.map(arg => JSON.stringify(arg)).join(',')}) - failed with "${conformed}"`;
@@ -52,7 +58,14 @@ class Chain {
 exports.Chain = Chain;
 class Schema {
     constructor(name, { req = [], opt = [] }) {
-        const state = { name, errors: [], req, opt };
+        const state = {
+            name,
+            errors: [],
+            input: {},
+            conformed: {},
+            req,
+            opt
+        };
         states.set(this, state);
     }
     static schema(name, schema) {
@@ -61,7 +74,7 @@ class Schema {
     static check(schema, object) {
         const state = states.get(schema);
         state.input = object;
-        state.conformed = undefined;
+        state.conformed = {};
         state.errors = [];
         state.req.forEach((validator) => {
             const key = states.get(validator).name;
@@ -69,9 +82,8 @@ class Schema {
                 __classPrivateFieldGet(Schema, _a, "m", _Schema_check).call(Schema, state, validator);
             }
             else {
-                state.errors = [...state.errors, {
-                        message: `Required field '${key}' is missing for schema '${state.name}'.`
-                    }];
+                const message = `Required field '${key}' is missing for schema '${state.name}'.`;
+                state.errors.push({ message });
             }
         });
         state.opt.forEach((validator) => {
@@ -90,22 +102,27 @@ _a = Schema, _Schema_check = function _Schema_check(state, validator) {
     let errorInfo;
     switch (validator.constructor.name) {
         case 'Chain':
-            const str = state.input[key];
-            validationResult = Chain.check(validator, str);
-            errorInfo = validationResult.explain();
+            validationResult = Chain.check(validator, state.input[key]);
             if (validationResult.isValid()) {
                 state.conformed = Object.assign(Object.assign({}, state.conformed), { [key]: validationResult.conform() });
             }
             else {
+                errorInfo = validationResult.explain();
                 state.errors.push(...errorInfo);
             }
             break;
         case 'Schema':
-            const object = state.input[key];
-            validationResult = Schema.check(validator, object);
-            errorInfo = validationResult.explain();
-            if (!validationResult.isValid()) {
-                state.errors.push(...errorInfo);
+            if (state.input[key].constructor.name === 'Object') {
+                validationResult = Schema.check(validator, state.input[key]);
+                if (!validationResult.isValid()) {
+                    errorInfo = validationResult.explain();
+                    state.errors.push(...errorInfo);
+                }
+            }
+            else {
+                state.errors.push({
+                    message: "Invalid type passed."
+                });
             }
             break;
     }

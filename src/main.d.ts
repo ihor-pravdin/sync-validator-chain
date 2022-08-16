@@ -2,20 +2,24 @@ import vjs from 'validator';
 export declare const VALID: symbol;
 export declare const INVALID: symbol;
 type Func<T> = (...args: unknown[]) => T;
+type Obj = {
+    [index: string]: unknown;
+};
 type VJS = keyof typeof vjs;
 type Validator = Chain | Schema;
-interface IState {
+type ValidatorState = IChainState | ISchemaState;
+interface IChainState {
     name: string;
     errors: IErrorInfo[];
-}
-interface IChainState extends IState {
-    input?: string;
-    conformed?: unknown;
+    input: string;
+    conformed: unknown;
     fns: Map<VJS, [Func<unknown>, unknown[]]>;
 }
-interface ISchemaState extends IState {
-    input?: any;
-    conformed?: object;
+interface ISchemaState {
+    name: string;
+    errors: IErrorInfo[];
+    input: Obj;
+    conformed: Obj;
     req: Validator[];
     opt: Validator[];
 }
@@ -38,13 +42,13 @@ export declare class Schema {
         req?: Validator[];
         opt?: Validator[];
     }): Schema;
-    static check(schema: Schema, object: object): ValidationResult;
+    static check(schema: Schema, object: Obj): ValidationResult;
 }
 declare class ValidationResult {
     isValid: () => boolean;
     conform: () => unknown;
     explain: () => symbol | IErrorInfo[];
-    constructor({ errors, conformed }: IChainState | ISchemaState);
+    constructor({ errors, conformed }: ValidatorState);
 }
 export {};
 //# sourceMappingURL=main.d.ts.map
